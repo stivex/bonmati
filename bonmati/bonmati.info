@@ -1,0 +1,6 @@
+name = "Bonmati Module"
+description = "Module that adds specific functionalities for historic information"
+core = 7.x
+files[] = bonmati.module
+package = My modules
+dependencies[] = select_with_style

@@ -1,0 +1,1327 @@
+<?php
+
+/**
+* @file
+* Bonmati Module
+* Module that adds specific functionalities for historic information
+*/
+
+/**
+*	Implements hook_form_BASE_ID_alter().
+*/
+function bonmati_form_node_form_alter(&$form, $form_state) {
+	
+	$node = $form['#node'];
+	
+	if ($node->type == 'history') {
+		
+    $form['field_history_year']['#attributes'] = array('style' => array('display: none;'));
+    $form['field_history_month']['#attributes'] = array('style' => array('display: none;'));
+    $form['field_history_day']['#attributes'] = array('style' => array('display: none;'));
+		
+		$form['history_node_form'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('Historic date'),
+			'#collapsible' => FALSE,
+			'#collapsed' => FALSE,
+			'#description' => t('You can specify: year/month/day or year/month or only a year. Year always is required.'),
+		);
+		
+		$form['history_node_form']['field_history_year_took_place'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Year it took place'),
+			'#size' => 4,
+			'#maxlength' => 4,
+			'#required' => TRUE,
+			'#default_value' => isset($node->field_history_year_took_place) ? $node->field_history_year_took_place : '',
+		);    
+		
+		$form['history_node_form']['field_history_month_took_place'] = array(
+			'#type' => 'select',
+			'#title' => t('Month it took place'),
+			'#required' => FALSE,		
+			'#options' => array(
+				'0' => t('None'),
+				'1' => t('January'),
+				'2' => t('February'),
+				'3' => t('March'),
+				'4' => t('April'),
+				'5' => t('May'),
+				'6' => t('June'),
+				'7' => t('July'),
+				'8' => t('August'),
+				'9' => t('September'),
+				'10' => t('October'),
+				'11' => t('November'),
+				'12' => t('December'),
+			),
+			'#default_value' => isset($node->field_history_month_took_place) ? $node->field_history_month_took_place : 0,
+		);    
+		
+		$form['history_node_form']['field_history_day_took_place'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Day it took place'),
+			'#size' => 4,
+			'#maxlength' => 4,
+			'#required' => FALSE,	
+			'#default_value' => isset($node->field_history_day_took_place) ? $node->field_history_day_took_place : '',		
+		);    
+		
+	} elseif ($node->type == 'ephemeris') {
+		
+    $form['field_ephemeris_year']['#attributes'] = array('style' => array('display: none;'));
+    $form['field_ephemeris_month']['#attributes'] = array('style' => array('display: none;'));
+    $form['field_ephemeris_day']['#attributes'] = array('style' => array('display: none;'));
+		
+		$form['ephemeris_node_form'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('Historic date'),
+			'#collapsible' => FALSE,
+			'#collapsed' => FALSE,
+			'#description' => t('You can specify: year/month/day or year/month or only a year. Year always is required.'),
+		);
+		
+		$form['ephemeris_node_form']['field_ephemeris_year_took_place'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Year it took place'),
+			'#size' => 4,
+			'#maxlength' => 4,
+			'#required' => TRUE,
+			'#default_value' => isset($node->field_ephemeris_year_took_place) ? $node->field_ephemeris_year_took_place : '',
+		);
+		
+		$form['ephemeris_node_form']['field_ephemeris_month_took_place'] = array(
+			'#type' => 'select',
+			'#title' => t('Month it took place'),
+			'#required' => FALSE,		
+			'#options' => array(
+				'0' => t('None'),
+				'1' => t('January'),
+				'2' => t('February'),
+				'3' => t('March'),
+				'4' => t('April'),
+				'5' => t('May'),
+				'6' => t('June'),
+				'7' => t('July'),
+				'8' => t('August'),
+				'9' => t('September'),
+				'10' => t('October'),
+				'11' => t('November'),
+				'12' => t('December'),
+			),
+			'#default_value' => isset($node->field_ephemeris_month_took_place) ? $node->field_ephemeris_month_took_place : 0,
+		);
+		
+		$form['ephemeris_node_form']['field_ephemeris_day_took_place'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Day it took place'),
+			'#size' => 4,
+			'#maxlength' => 4,
+			'#required' => FALSE,	
+			'#default_value' => isset($node->field_ephemeris_day_took_place) ? $node->field_ephemeris_day_took_place : '',		
+		);
+		
+	}
+	
+}
+
+/**
+*	Implements hook_node_validate().
+*/
+function bonmati_node_validate($node, $form, &$form_state) {
+	
+	$valid_year = TRUE;
+  $valid_month = TRUE;
+  
+	if ($node->type == 'history') {
+	
+		//Year validations
+		if (!is_numeric($form_state['values']['field_history_year_took_place'])) {
+      $valid_year = FALSE;
+			form_set_error('field_history_year_took_place', t('Year must be a number.'));
+		}
+		if ($form_state['values']['field_history_year_took_place'] < 0 || 
+				$form_state['values']['field_history_year_took_place'] > date("Y")) {
+      $valid_year = FALSE;
+			form_set_error('field_history_year_took_place', t('Year must be between 0 and ') . date("Y") . '.');
+		}
+		
+		//Month validations
+		if ($form_state['values']['field_history_month_took_place'] > 0) {			
+			if (!is_numeric($form_state['values']['field_history_month_took_place'])) {
+        $valid_month = FALSE;
+				form_set_error('field_history_month_took_place', t('Month must be a number.'));
+			}
+			if ($form_state['values']['field_history_month_took_place'] < 1 || 
+					$form_state['values']['field_history_month_took_place'] > 12) {
+        $valid_month = FALSE;
+				form_set_error('field_history_month_took_place', t('Select a correct month from the list.'));
+			}			
+		}
+		
+		//Day validations
+		if (isset($form_state['values']['field_history_day_took_place'])) {
+			if (!empty($form_state['values']['field_history_day_took_place'])) {
+				
+				if ($form_state['values']['field_history_month_took_place'] < 1 || 
+					$form_state['values']['field_history_month_took_place'] > 12) {
+					form_set_error('field_history_month_took_place', t('If you specify a day, you have to specify a month.'));
+				}	else {
+					
+					if (!is_numeric($form_state['values']['field_history_day_took_place'])) {
+						form_set_error('field_history_year_took_place', t('Day must be a number.'));
+					} else {
+
+          	if ($valid_year && $valid_month) {  
+              $numer_days_in_month = cal_days_in_month(CAL_GREGORIAN, 
+                                            $form_state['values']['field_history_month_took_place'], 
+                                            $form_state['values']['field_history_year_took_place']);
+                                                    
+              if ($form_state['values']['field_history_day_took_place'] < 1 &&
+                  $form_state['values']['field_history_day_took_place'] > $numer_days_in_month) {
+                form_set_error('field_history_day_took_place', t('The day of the month is no correct.'));
+              }
+            }
+					
+					}
+					
+				}
+				
+			}
+		}
+	
+	} elseif ($node->type == 'ephemeris') {
+
+		//Year validations
+		if (!is_numeric($form_state['values']['field_ephemeris_year_took_place'])) {
+      $valid_year = FALSE;
+			form_set_error('field_ephemeris_year_took_place', t('Year must be a number.'));
+		}
+		if ($form_state['values']['field_ephemeris_year_took_place'] < 0 || 
+				$form_state['values']['field_ephemeris_year_took_place'] > date("Y")) {
+      $valid_year = FALSE;
+			form_set_error('field_ephemeris_year_took_place', t('Year must be between 0 and ') . date("Y") . '.');
+		}
+		
+		//Month validations
+		if ($form_state['values']['field_ephemeris_month_took_place'] > 0) {			
+			if (!is_numeric($form_state['values']['field_ephemeris_month_took_place'])) {
+        $valid_month = FALSE;
+				form_set_error('field_ephemeris_month_took_place', t('Month must be a number.'));
+			}
+			if ($form_state['values']['field_ephemeris_month_took_place'] < 1 || 
+					$form_state['values']['field_ephemeris_month_took_place'] > 12) {
+        $valid_month = FALSE;
+				form_set_error('field_ephemeris_month_took_place', t('Select a correct month from the list.'));
+			}			
+		}
+		
+		//Day validations
+		if (isset($form_state['values']['field_ephemeris_day_took_place'])) {
+			if (!empty($form_state['values']['field_ephemeris_day_took_place'])) {
+				
+				if ($form_state['values']['field_ephemeris_month_took_place'] < 1 || 
+					$form_state['values']['field_ephemeris_month_took_place'] > 12) {
+					form_set_error('field_ephemeris_month_took_place', t('If you specify a day, you have to specify a month.'));
+				}	else {
+					
+					if (!is_numeric($form_state['values']['field_ephemeris_day_took_place'])) {
+						form_set_error('field_ephemeris_year_took_place', t('Day must be a number.'));
+					} else {
+
+            if ($valid_year && $valid_month) {
+              $numer_days_in_month = cal_days_in_month(CAL_GREGORIAN, 
+                                            $form_state['values']['field_ephemeris_month_took_place'], 
+                                            $form_state['values']['field_ephemeris_year_took_place']);
+                                                    
+              if ($form_state['values']['field_ephemeris_day_took_place'] < 1 &&
+                  $form_state['values']['field_ephemeris_day_took_place'] > $numer_days_in_month) {
+                form_set_error('field_ephemeris_day_took_place', t('The day of the month is no correct.'));
+              }
+            }
+					
+					}
+					
+				}
+				
+			}
+		}
+	
+	}
+	
+}
+
+/**
+* hook_node_presave()
+*/
+function bonmati_node_presave($node) {
+  if ($node->type == 'history') {
+    $node->field_history_year['und'][0]['value'] = $node->field_history_year_took_place;
+    $node->field_history_month['und'][0] = $node->field_history_month_took_place;
+    
+		if (empty($node->field_history_day_took_place)) {
+			//If no day is set
+			$node->field_history_day_took_place = null;
+			$node->field_history_day['und'][0]['value'] = null;
+		} else {
+			//Day is set
+			$node->field_history_day['und'][0] = $node->field_history_day_took_place;
+		}
+		
+  } elseif ($node->type == 'ephemeris') {
+		
+    $node->field_ephemeris_year['und'][0]['value'] = $node->field_ephemeris_year_took_place;
+    $node->field_ephemeris_month['und'][0]['value'] = $node->field_ephemeris_month_took_place;
+		
+		if (empty($node->field_ephemeris_day_took_place)) {
+			//If no day is set
+			$node->field_ephemeris_day_took_place = null;
+			$node->field_ephemeris_day['und'][0]['value'] = null;
+		} else {
+			//Day is set
+			$node->field_ephemeris_day['und'][0]['value'] = $node->field_ephemeris_day_took_place;
+		}
+		
+  }
+}
+
+/**
+*	Implements hook_node_insert().
+*/
+function bonmati_node_insert($node) {
+	
+	if ($node->type == 'history') {
+
+		db_insert('bonmati_history')
+			->fields(array(
+				'nid' => $node->nid,
+				'year' => $node->field_history_year_took_place,
+				'month' => $node->field_history_month_took_place,
+				'day' => $node->field_history_day_took_place,
+			))
+			->execute();
+			
+	} elseif ($node->type == 'ephemeris') {
+
+		db_insert('bonmati_ephemeris')
+			->fields(array(
+				'nid' => $node->nid,
+				'year' => $node->field_ephemeris_year_took_place,
+				'month' => $node->field_ephemeris_month_took_place,
+				'day' => $node->field_ephemeris_day_took_place,
+			))
+			->execute();
+	
+	}
+	
+}
+
+/**
+*	Implements hook_node_update().
+*/
+function bonmati_node_update($node) {
+
+	if ($node->type == 'history') {
+
+		db_update('bonmati_history')
+			->fields(array(
+					'year' => $node->field_history_year_took_place,
+					'month' => $node->field_history_month_took_place,
+					'day' => $node->field_history_day_took_place,
+			))
+			->condition('nid', $node->nid)
+			->execute();
+			
+	} elseif ($node->type == 'ephemeris') {
+		
+		db_update('bonmati_ephemeris')
+			->fields(array(
+					'year' => $node->field_ephemeris_year_took_place,
+					'month' => $node->field_ephemeris_month_took_place,
+					'day' => $node->field_ephemeris_day_took_place,
+			))
+			->condition('nid', $node->nid)
+			->execute();
+	
+	}
+	
+}
+
+/**
+*	Implements hook_node_delete().
+*/
+function bonmati_node_delete($node) {
+	
+	if ($node->type == 'history') {
+		db_delete('bonmati_history')
+			->condition('nid', $node->nid)
+			->execute();
+      
+	} elseif ($node->type == 'ephemeris') {
+		db_delete('bonmati_ephemeris')
+			->condition('nid', $node->nid)
+			->execute();
+      
+	}
+	
+}
+
+/**
+* Implements hook_node_load().
+*/
+function bonmati_node_load($nodes, $types) {
+	
+	//History
+	$result = db_query('SELECT nid, year, month, day FROM {bonmati_history} WHERE nid IN (:nids)', 
+											array(':nids' => array_keys($nodes)));
+											
+	foreach ($result as $record) {
+		$nodes[$record->nid]->field_history_year_took_place = $record->year;
+		$nodes[$record->nid]->field_history_month_took_place = $record->month;
+		$nodes[$record->nid]->field_history_day_took_place = $record->day;
+    
+    $nodes[$record->nid]->field_history_year['und'][0]['value'] = $record->year;
+    $nodes[$record->nid]->field_history_month['und'][0]['value'] = $record->month;
+    $nodes[$record->nid]->field_history_day['und'][0]['value'] = $record->day;
+	}
+	
+	//Ephemeris
+	$result = db_query('SELECT nid, year, month, day FROM {bonmati_ephemeris} WHERE nid IN (:nids)', 
+											array(':nids' => array_keys($nodes)));
+											
+	foreach ($result as $record) {
+		$nodes[$record->nid]->field_ephemeris_year_took_place = $record->year;
+		$nodes[$record->nid]->field_ephemeris_month_took_place = $record->month;
+		$nodes[$record->nid]->field_ephemeris_day_took_place = $record->day;
+    
+    $nodes[$record->nid]->field_ephemeris_year['und'][0]['value'] = $record->year;
+    $nodes[$record->nid]->field_ephemeris_month['und'][0]['value'] = $record->month;
+    $nodes[$record->nid]->field_ephemeris_day['und'][0]['value'] = $record->day;
+	}
+	
+}
+
+/**
+*	Implements hook_node_view().
+*/
+function bonmati_node_view($node, $view_mode, $langcode) {	
+  
+  if ($node->type == 'history') {
+    
+    $node->content['field_history_year_took_place'] = array(
+      '#markup' => theme('bonmati_year', array('year' => $node->field_history_year_took_place)),
+      '#weight' => 1,
+    );
+		
+    $node->content['field_history_month_took_place'] = array(
+      '#markup' => theme('bonmati_month', array('month' => $node->field_history_month_took_place)),
+      '#weight' => 2,
+    );
+
+    $node->content['field_history_day_took_place'] = array(
+      '#markup' => theme('bonmati_day', array('day' => $node->field_history_day_took_place)),
+      '#weight' => 3,
+    );
+    
+  } elseif ($node->type == 'ephemeris') {
+
+    $node->content['field_ephemeris_year_took_place'] = array(
+      '#markup' => theme('bonmati_year', array('year' => $node->field_ephemeris_year_took_place)),
+      '#weight' => 1,
+    );
+		
+    $node->content['field_ephemeris_month_took_place'] = array(
+      '#markup' => theme('bonmati_month', array('month' => $node->field_ephemeris_month_took_place)),
+      '#weight' => 2,
+    );
+
+    $node->content['field_ephemeris_day_took_place'] = array(
+      '#markup' => theme('bonmati_day', array('day' => $node->field_ephemeris_day_took_place)),
+      '#weight' => 3,
+    );
+	
+	}
+  
+  return $node;
+  
+}
+
+/**
+* Implements hook_theme().
+*/
+function bonmati_theme($existing, $type, $theme, $path) {
+	return array(
+    'bonmati_year' => array(
+      'variables' => array('year' => 0),
+    ),
+    'bonmati_month' => array(
+      'variables' => array('month' => 0),
+    ),
+    'bonmati_day' => array(
+      'variables' => array('day' => 0),
+    ),
+		'bonmati_ephemeris_list' => array(
+			'template' => 'bonmati-ephemeris-list',
+			'variables' => array('nodes' => NULL),
+		),
+  );
+}
+
+function theme_bonmati_year($variables) {
+  $output = '<div class="field-label" >';
+  $output .= t('Year') . ': ' . $variables['year'];
+  $output .= '</div>';
+  return $output;
+}
+
+function theme_bonmati_month($variables) {
+  $output = '<div class="field-label" >';
+  $output .= t('Month') . ': ' . $variables['month'];
+  $output .= '</div>';
+  return $output;
+}
+
+function theme_bonmati_day($variables) {
+  $output = '<div class="field-label" >';
+  $output .= t('Day') . ': ' . $variables['day'];
+  $output .= '</div>';
+  return $output;
+}
+
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+
+/**
+* Implements hook_block_info().
+*/
+function bonmati_block_info() {
+  
+  $blocks['block_ephemeris_by_place'] = array(
+    'info' => t('Ephemeris by place'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  
+  $blocks['block_history_by_place'] = array(
+    'info' => t('Histories by place'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+	
+	$blocks['block_ephemeris_by_charecter'] = array(
+    'info' => t('Ephemeris by character'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  
+  $blocks['block_history_by_character'] = array(
+    'info' => t('Histories by character'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+	
+  $blocks['block_character_related'] = array(
+    'info' => t('Characters related'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+	
+	$blocks['block_ephemeris_anniversary'] = array(
+    'info' => t('Ephemeris anniversary'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+	
+	$blocks['block_ephemeris_subscription'] = array(
+    'info' => t('Ephemeris subscription'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+	
+	$blocks['block_multimedia_related'] = array(
+    'info' => t('Multimedia related'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+	
+  return $blocks;
+  
+}
+/**
+* Implements hook_block_view().
+*/
+function bonmati_block_view($delta = '') {
+  
+  $block = array();
+	
+	switch ($delta) {
+		case 'block_ephemeris_by_place':
+      
+      $block['subject'] = t('Ephemeris related by place');
+      
+      //We get the current node
+      if ( arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2) ) {
+        
+        //We load the node
+        $node = node_load(arg(1));    
+        
+        if ($node->type == 'place') {
+          
+          $result = db_select('field_data_field_ephemeris_place', 'p')
+            ->fields('p', array('entity_id'))
+            ->condition('field_ephemeris_place_target_id', $node->nid)
+            ->range(0, 5)
+            ->execute();
+          
+          $list_nid_ephemeris = $result->fetchCol(); 
+          
+          $block['content'] = node_title_list(node_load_multiple($list_nid_ephemeris));
+          
+        }
+        
+      }
+			
+			break;
+    case 'block_history_by_place':
+      
+      $block['subject'] = t('History related by place');
+      
+      //We get the current node
+      if ( arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2) ) {
+        
+        //We load the node
+        $node = node_load(arg(1));    
+        
+        if ($node->type == 'place') {
+          
+          $result = db_select('field_data_field_history_place', 'p')
+            ->fields('p', array('entity_id'))
+            ->condition('field_history_place_target_id', $node->nid)
+            ->range(0, 5)
+            ->execute();
+          
+          $list_nid_histories = $result->fetchCol(); 
+          
+          $block['content'] = node_title_list(node_load_multiple($list_nid_histories));
+          
+        }
+        
+      }
+      
+      break;
+			
+		case 'block_ephemeris_by_charecter':
+			
+      $block['subject'] = t('Ephemeris related by character');
+      
+      //We get the current node
+      if ( arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2) ) {
+        
+        //We load the node
+        $node = node_load(arg(1));    
+        
+        if ($node->type == 'characters') {
+          
+          $result = db_select('field_data_field_ephemeris_characters', 'c')
+            ->fields('c', array('entity_id'))
+            ->condition('field_ephemeris_characters_target_id', $node->nid)
+            ->range(0, 5)
+            ->execute();
+          
+          $list_nid_ephemeris = $result->fetchCol(); 
+          
+          $block['content'] = node_title_list(node_load_multiple($list_nid_ephemeris));
+          
+        }
+        
+      }
+			
+			break;
+			
+		case 'block_history_by_character':
+			
+      $block['subject'] = t('History related by character');
+      
+      //We get the current node
+      if ( arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2) ) {
+        
+        //We load the node
+        $node = node_load(arg(1));    
+				
+        if ($node->type == 'characters') {
+          
+          $result = db_select('field_data_field_history_characters', 'c')
+            ->fields('c', array('entity_id'))
+            ->condition('field_history_characters_target_id', $node->nid)
+            ->range(0, 5)
+            ->execute();
+          
+          $list_nid_histories = $result->fetchCol(); 
+          
+          $block['content'] = node_title_list(node_load_multiple($list_nid_histories));
+          
+        }
+        
+      }
+			
+			break;
+			
+		case 'block_character_related':
+			
+			$block['subject'] = t('Characters related');
+			
+      //We get the current node
+      if ( arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2) ) {
+        
+        //We load the node
+        $node = node_load(arg(1));
+
+				$list_nid_characters = array();				
+				
+        if ($node->type == 'history') {
+          
+					//$list_nid_characters = $node->field_history_characters;
+					if (!empty($node->field_history_characters)) {
+						for($i = 0; $i < sizeof($node->field_history_characters['und']); $i++) {
+							array_push($list_nid_characters, $node->field_history_characters['und'][$i]['target_id']);
+						}
+					}
+          
+        } else if ($node->type == 'ephemeris') {
+					
+					if (!empty($node->field_ephemeris_characters)) {
+						for($i = 0; $i < sizeof($node->field_ephemeris_characters['und']); $i++) {
+							array_push($list_nid_characters, $node->field_ephemeris_characters['und'][$i]['target_id']);
+						}
+					}
+					
+				}
+				
+				//We fill the content with a list of characters
+				if (!empty($list_nid_characters)) {
+					$block['content'] = node_title_list(node_load_multiple($list_nid_characters));
+				}
+        
+      }
+			
+			break;
+			
+		case 'block_ephemeris_anniversary':
+			
+			$month = date('n');
+			$month_name = format_date(mktime(0, 0, 0, $month, 1), 'custom', 'F');
+
+			//If the first character of the month is a vowel...
+			if (preg_match('/^[aeiou]/i', $month_name)){
+				$month_name = "d'" . $month_name;
+			} else {
+				$month_name = "de " . $month_name;
+			}
+		
+			$block['subject'] = t('Ephemeris of') . ' ' . strtolower($month_name);
+			
+			$result = db_select('bonmati_ephemeris', 'e')
+				->fields('e', array('nid'))
+				->condition('month', $month)
+				->execute();
+					
+      $list_nid_ephemeris = $result->fetchCol();
+			shuffle($list_nid_ephemeris);
+			$list_nid_ephemeris = array_slice($list_nid_ephemeris, 0, 3);
+
+			//$block['content'] = node_title_list(node_load_multiple($list_nid_ephemeris));
+			
+			$block['content'] = theme('bonmati_ephemeris_list', array('nodes' => array(node_load_multiple($list_nid_ephemeris))));
+			break;
+			
+		case 'block_ephemeris_subscription':
+		
+			$block['subject'] = t('Subscribe to ephemeris');
+			$block['content'] = drupal_get_form('bonmati_form_ephemeris_subscription');
+			
+			break;
+		
+		case 'block_multimedia_related':
+		
+			$block['subject'] = t('Multimedia related');
+			
+			//We get the current node
+      if ( arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2) ) {
+        
+        //We load the node
+        $node = node_load(arg(1));    
+				
+        if ($node->type == 'history') {
+					
+					$block_content = '';
+					
+					//Multimedia audios
+					if (!empty($node->field_history_audio)) {
+						
+						for($i = 0; $i < sizeof($node->field_history_audio['und']); $i++) {
+							$audiofile=file_create_url($node->field_history_audio['und'][$i]['uri']);
+							$info = pathinfo($audiofile);
+							$op = $info['extension'];
+							$typeaudio = ($op =='mp3'? 'audio/mpeg' : 'audio/ogg');
+							$block_content .= '<div>' . $node->field_history_audio['und'][$i]['description'] . '<audio controls> <source src="' . $audiofile . '" type="' . $typeaudio . '"> </audio> </div>';
+						}
+						
+					}
+					
+					//Multimedia images and videos from galleries
+					if (!empty($node->field_history_galleries['und'])) {
+						$entity = node_load($node->field_history_galleries['und'][0]['target_id']);		
+						$val = node_view($entity, 'media_gallery_block');					
+						$block_content .= render($val);
+					}
+					
+					$block['content'] = $block_content;
+					
+        } else if ($node->type == 'ephemeris') {
+					
+					$block_content = '';
+					
+					//Multimedia audios
+					if (!empty($node->field_ephemeris_audio)) {
+						
+						for($i = 0; $i < sizeof($node->field_ephemeris_audio['und']); $i++) {
+							$audiofile=file_create_url($node->field_ephemeris_audio['und'][$i]['uri']);
+							$info = pathinfo($audiofile);
+							$op = $info['extension'];
+							$typeaudio = ($op =='mp3'? 'audio/mpeg' : 'audio/ogg');
+							$block_content .= '<div>' . $node->field_ephemeris_audio['und'][$i]['description'] . '<audio controls> <source src="' . $audiofile . '" type="' . $typeaudio . '"> </audio> </div>';
+						}
+						
+					}
+					
+					//Multimedia images and videos from galleries
+					if (!empty($node->field_ephemeris_galleries['und'])) {
+						$entity = node_load($node->field_ephemeris_galleries['und'][0]['target_id']);		
+						$val = node_view($entity, 'media_gallery_block');					
+						$block_content .= render($val);
+					}
+					
+					$block['content'] = $block_content;
+					
+				}
+				
+        
+      }
+			
+			break;
+	}
+		
+	return $block;
+	
+}
+
+/**
+* Function that creates form for ephemeris subscription
+*/
+function bonmati_form_ephemeris_subscription($form_state) {
+	
+	$form['description'] = array(
+		'#type' => 'item',
+		'#title' => t('Vols rebre periòdicament les efemèrides per correu electrònic? Indiqueu la vostra adreça de correu electrònic en el següent camp.'),
+	);
+	
+	$form['email'] = array(
+		'#type' => 'textfield',
+		'#title' => t('E-mail'),
+	);
+	
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Send'),
+	);
+	
+	return $form;
+	
+}
+
+/**
+* Function that validates that e-mail adress are valid
+*/
+function bonmati_form_ephemeris_subscription_validate($form, &$form_state) {
+	
+	if(!valid_email_address($form_state['values']['email'])){
+		form_set_error('email', t('You must enter a valid e-mail address.'));
+	}
+	
+	//We check if the e-mail adddress already exists in our database
+	$results = db_select('bonmati_ephemeris_subscription', 'p')
+		->fields('p', array('email'))
+		->condition('email', $form_state['values']['email'])
+		->condition('confirmed', 1)
+		->execute()
+		->fetchAll();
+	
+	if (count($results) > 0) {
+		form_set_error('email', t('This e-mail address has already subscribed.'));
+	}
+	
+}
+
+function bonmati_form_ephemeris_subscription_submit($form, &$form_state) {
+	
+	//Remove if the e-mail already exists but it isn't confirmed
+	db_delete('bonmati_ephemeris_subscription')
+			->condition('email', $form_state['values']['email'])
+			->condition('confirmed', 0)
+			->execute();
+	
+	//Add the e-mail address in the table
+	$result = db_insert('bonmati_ephemeris_subscription')
+											->fields(array(
+												'email' => $form_state['values']['email'],
+												'confirmed' => 0,
+											))
+											->execute();
+	
+	//Send and e-mail confirmation
+	global $language;
+	
+	$params = $form_state['values'];
+	$params['id'] = $result;
+	
+	$from = 'no-reply@stjuliabonmati.com';
+	$to = $form_state['values']['email'];
+	drupal_mail('bonmati', 'email_ephemeris_confirmation', $to, $language, $params, $from);
+
+	drupal_set_message(t('Thank you! To complete your subscription confirm an e-mail that we have sent on') . ' ' . $to . t('. Check your email account. Check the spam folder.'));
+	
+	drupal_goto("");
+	
+}
+
+/**
+*	Implements hook_mail().
+*/
+function bonmati_mail($key, &$message, $params) {
+	
+	$language = $message['language'];
+	
+	$variables = array(
+											'!site-name' => variable_get('site_name', 'Drupal'),
+										);
+								
+	global $base_url;
+	
+	switch ($key) {
+		case 'email_ephemeris_confirmation':
+		
+			$link = $base_url . '/confirmacio-subscripcio/' . $params['id'];
+			
+			$message['subject'] = t('[!site-name] - Confirmació de subscripció a les efemèrides', $variables);
+			
+			$body_html = '';
+			$body_html .= '<p>' . t('Has sol·licitat rebre les efemèrides del portal !site-name.', $variables) . '</p>';
+			$body_html .= '<p>' . t('Clica en el següent enllaç per confirmar la subscripció:') . '</p>';
+			$body_html .= '<p><b><a href="' . $link . '" target="_blank">' . t('CONFIRMAR SUBSCRIPCIÓ') . '</a></b></p>';
+			$body_html .= '<p>' . t('Ens cas que no hagis sol·licitat rebre les efemèrides, ignora aquest correu.') . '</p>';
+			
+			$message['body'][] = $body_html;
+			
+			break;
+		
+		case 'email_ephemeris_unsubscription_confirmation':
+			
+			$link = $base_url . '/confirmacio-baixa-subscripcio/' . base64_encode($params['id']) . '/' . base64_encode($params['email']);
+			
+			$message['subject'] = t('[!site-name] - Confirmació de baixa a les efemèrides', $variables);
+			
+			$body_html = '';
+			$body_html .= '<p>' . t('Has sol·licitat donar-te de baixa a les efemèrides del portal !site-name.', $variables) . '</p>';
+			$body_html .= '<p>' . t('Clica en el següent enllaç per confirmar la baixa:') . '</p>';
+			$body_html .= '<p><b><a href="' . $link . '" target="_blank">' . t('CONFIRMAR BAIXA') . '</a></b></p>';
+			
+			$message['body'][] = $body_html;
+			
+			break;
+		
+		case 'email_ephemeris_subscription':
+			
+			$message['headers'] += $params['headers'];
+		
+			$dataToday = '(' .date("d") . '/' . date("m") . '/' . date("Y") . ')';
+			$message['subject'] = t('[!site-name] - Les efemèrides d\'avui ' . $dataToday, $variables);
+			
+			$body_html = '';
+			
+			if (!empty($params['group-mail-1'])) {
+				$body_html .= '<h3>' . t('Tal dia com avui...') . '</h3>';
+				$body_html .= '<ul>';
+				foreach ($params['group-mail-1'] as $record) {
+					$link1 = $base_url . '/' . drupal_get_path_alias('node/' . $record->nid);
+					$body_html .= '<li><a href="' . $link1 . '" target="_blank">' . $record->title . '</a></li>';
+				}
+				$body_html .= '</ul>';
+			}
+			
+			if (!empty($params['group-mail-2'])) {
+				$body_html .= '<h3>' . t('Aquest mes també es celebra...') . '</h3>';
+				$body_html .= '<ul>';
+				foreach ($params['group-mail-2'] as $record) {
+					$link2 = $base_url . '/' . drupal_get_path_alias('node/' . $record->nid);
+					$body_html .= '<li><a href="' . $link2 . '" target="_blank">' . $record->title . '</a></li>';
+				}
+				$body_html .= '</ul>';
+			}
+			
+			if (!empty($params['group-mail-3'])) {
+				$body_html .= '<h3>' . t('Aquest any també es celebra...') . '</h3>';
+				$body_html .= '<ul>';
+				foreach ($params['group-mail-3'] as $record) {
+					$link3 = $base_url . '/' . drupal_get_path_alias('node/' . $record->nid);
+					$body_html .= '<li><a href="' . $link3 . '" target="_blank">' . $record->title . '</a></li>';
+				}
+				$body_html .= '</ul>';
+			}
+			
+			$link = $base_url . '/baixa-subscripcio/';
+			$body_html .= '<p>' . t('Vols donar-te de baixa?') . ' <a href="' . $link . '" target="_blank" >' . t('CLICA AQUÍ') . '</a>';
+			
+			$message['body'][] = $body_html;
+			
+			break;
+	}
+	
+}
+
+/**
+* Implements hook_menu().
+*/
+function bonmati_menu() {
+	
+	$items['confirmacio-subscripcio/%'] = array(
+		'title' => t('Confirmació de subscripció a les efemèrides'),
+		'page callback' => 'bonmati_menu_subscription_confirmation',
+		'page arguments' => array(1),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['baixa-subscripcio'] = array(
+		'title' => t('Baixa de subscripció de les efemèrides'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('bonmati_form_unsubscribe'),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+		$items['confirmacio-baixa-subscripcio/%/%'] = array(
+		'title' => t('Confirmació baixa de subscripció a les efemèrides'),
+		'page callback' => 'bonmati_menu_unsubscription_confirmation',
+		'page arguments' => array(1,2),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	return $items;
+	
+}
+
+/**
+* It triggers when a user clicks over the confirmation link on the email 
+*/
+function bonmati_menu_subscription_confirmation($id='') {
+	
+	$result = db_select('bonmati_ephemeris_subscription', 'e')
+		->fields('e', array('email'))
+		->condition('id', $id)
+		->execute()
+		->fetchAssoc();
+	
+	if (isset($result['email']) && !empty($result['email'])) {
+		db_update('bonmati_ephemeris_subscription')
+			->fields(array(
+					'confirmed' => 1,
+			))
+			->condition('id', $id)
+			->execute();
+		
+		$output = '<p>';
+		$output .= t('Enhorabona!');
+		$output .= '</p><p>';
+		$output .= t('La subscripció ha estat confirmada.');
+		$output .= '</p><p>';
+		$output .= t('A partir d\'ara, rebràs periòdicament les efemèrides a la direcció de correu');	
+		$output .= ' ' . $result['email'];
+		$output .= '</p>';
+	} else {
+		drupal_goto("");
+	}
+	
+	return $output;
+	
+}
+
+/**
+* It triggers when a user clicks over the link on the email to unsubscribe ephemeris
+*/
+function bonmati_form_unsubscribe($form_state) {
+	
+	$form['description'] = array(
+		'#type' => 'item',
+		'#title' => t('Write your e-mail to unsubscribe ephemeris. You will recieve a confirmation e-mail.'),
+	);
+	
+	$form['email'] = array(
+		'#type' => 'textfield',
+		'#title' => t('E-mail'),
+	);
+	
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => 'Baixa',
+	);
+	
+	return $form;
+	
+}
+
+/**
+* Function that validates that e-mail adress are valid
+*/
+function bonmati_form_unsubscribe_validate($form, &$form_state) {
+	
+	if(!valid_email_address($form_state['values']['email'])){
+		form_set_error('email', t('You must enter a valid e-mail address.'));
+	}
+	
+}
+
+/**
+* Function that send an email to user that he don't want to recieve any ephemeris by mail
+*/
+function bonmati_form_unsubscribe_submit($form, &$form_state) {
+	
+	$language = '';
+	
+	$from = 'no-reply@stjuliabonmati.com';
+	$to = $form_state['values']['email'];
+	
+	//We get the ID subscription, and we pass it as a parameter
+	$result = db_select('bonmati_ephemeris_subscription', 'e')
+		->fields('e', array('id'))
+		->condition('email', $to)
+		->execute()
+		->fetchAssoc();
+		
+	if (isset($result['id']) && !empty($result['id'])) {
+		
+		$params['id'] = $result['id'];
+		$params['email'] = $to;
+		
+		//We send the email
+		drupal_mail('bonmati', 'email_ephemeris_unsubscription_confirmation', $to, $language, $params, $from);
+		
+	}
+	//We show a message for user
+	drupal_set_message(t('Thank you! To complete your unsubscription, confirm an e-mail that we have sent on') . t('. Check your email account. Check the spam folder.'));
+	
+	//We go to main page
+	drupal_goto("");
+	
+}
+
+/**
+* It triggers when a user clicks over the confirmation link
+*/
+function bonmati_menu_unsubscription_confirmation($id='',$email='') {
+	
+	$id = base64_decode($id);
+	$email = base64_decode($email);
+	
+	if (!empty($id) && !empty($email)) {
+	
+		db_delete('bonmati_ephemeris_subscription')
+			->condition('id', $id)
+			->condition('email', $email)
+			->execute();
+		
+		$output = '<p>';
+		$output .= t('Enhorabona!');
+		$output .= '</p><p>';
+		$output .= t('La subscripció ha estat donada de baixa.');
+		$output .= '</p><p>';
+		$output .= t('A partir d\'ara ja no rebràs periòdicament les efemèrides a la direcció de correu');	
+		$output .= ' ' . $email;
+		$output .= '</p>';
+	} else {
+		drupal_goto("");
+	}
+	
+	return $output;
+	
+}
+
+/**
+* Function that publishes a tweet on Twitter
+*/
+function publish_tweet($node) {
+	
+	global $base_url;
+	
+	watchdog('cron', 'Mirem de fer un tweet...', array(), WATCHDOG_NOTICE);
+
+	// require codebird
+	require_once('codebird-php-4.0.0-beta.1/codebird.php');
+	
+	// uncomment the next line line with your_ConsumerKey and  your_ConsumerSecret
+	//\Codebird\Codebird::setConsumerKey("your_ConsumerKey", "your_ConsumerSecret");
+	
+	$cb = \Codebird\Codebird::getInstance();
+	
+	// uncomment the next line line with your_your_AccessToken and  your_AccessTokenSecret
+	//$cb->setToken("your_AccessToken", "your_AccessTokenSecret");
+	
+	$years = date("Y") - $node->field_ephemeris_year_took_place;
+	if ($years <= 1) {
+		$years = 'Ara fa ' . $years . ' any: ';
+	} else {
+		$years = 'Ara fa ' . $years . ' anys: ';
+	}
+	$url = $base_url . url('node/'. $node->nid);
+	
+	if (!empty($node->field_ephemeris_cover_image['und'][0]['uri'])) {
+			//Post with image
+			watchdog('cron', 'Tweet amb imatge.', array(), WATCHDOG_NOTICE);
+			$params = array(
+				'status' => $years . $node->title . ' ' . $url,
+				'media[]' => file_create_url($node->field_ephemeris_cover_image['und'][0]['uri']),
+			);
+			$reply = $cb->statuses_updateWithMedia($params);
+	} else {
+		//Post without image
+		watchdog('cron', 'Tweet sense imatge.', array(), WATCHDOG_NOTICE);
+		$params = array(
+			'status' => $years . $node->title . ' ' . $url,
+		);
+		$reply = $cb->statuses_update($params);
+	}
+	
+	$status = $reply->httpstatus;
+	
+	if($status == 200) {
+		watchdog('cron', 'S\'ha pogut publicat un nou tweet.', array(), WATCHDOG_NOTICE);
+	} else {
+		watchdog('cron', 'No s\'ha pogut publicar el tweet.', array(), WATCHDOG_ERROR);
+	}
+	
+}
+
+/**
+* Implements hook_cron().
+*/
+function bonmati_cron() {
+
+	watchdog('cron', 'Verificar si hi ha efemèrides per enviar avui...', array(), WATCHDOG_NOTICE);
+	
+	//we check the table bonmati_ephemeris_last_check when was the last time that we checked if there was pending ephemeris for send
+	$result = db_select('bonmati_ephemeris_last_check', 'p')
+		->fields('p', array('last_check'))
+		->execute();
+	
+		$lastCheckDate = date("Ymd", $result->fetchField());
+		$nowDate = date("Ymd");
+	
+	if ($result->rowCount() == 0 || $lastCheckDate  < $nowDate) {
+		
+		//we have to check de ephemeris table, if it exists someone where the anniversary is today
+		watchdog('cron', "Avui encara no s'han comprovat si hi ha efemèrides pendents d'enviar.", array(), WATCHDOG_NOTICE);
+		
+		$nowDay = date("d");
+		$nowMonth = date("m");
+		$nowYear = date("Y");
+		
+		//Ephemeris by month and day
+		$result = db_select('bonmati_ephemeris', 'e')
+								->fields('e', array('nid'))
+								->condition('month', $nowMonth)
+								->condition('day', $nowDay)
+								->execute();
+		
+		$arrayEphemerisGroup1 = array();
+		foreach ($result as $record) {
+			array_push($arrayEphemerisGroup1, node_load($record->nid));
+		}
+						
+		//Ephemeris by month (every 1st of each month)
+		$arrayEphemerisGroup2 = array();
+		if ($nowDay == "1") {
+			
+			$result = db_select('bonmati_ephemeris', 'e')
+									->fields('e', array('nid'))
+									->condition('month', $nowMonth)
+									->condition('day', null)
+									->execute();
+									
+			foreach ($result as $record) {
+				array_push($arrayEphemerisGroup2, node_load($record->nid));
+			}
+			
+		}
+		
+		//Ephemeris by year (every 1st day of each year)
+		$arrayEphemerisGroup3 = array();
+		if ($nowDay == "1" && $nowMonth == "1") {
+			
+			$result = db_select('bonmati_ephemeris', 'e')
+									->fields('e', array('nid'))
+									->condition('month', null)
+									->condition('day', null)
+									->execute();
+			
+			foreach ($result as $record) {
+				array_push($arrayEphemerisGroup3, node_load($record->nid));
+			}
+			
+		}
+		
+		//we send the email		
+		if (!empty($arrayEphemerisGroup1) || !empty($arrayEphemerisGroup2) || !empty($arrayEphemerisGroup3)) {
+			global $language;
+		
+			$params['group-mail-1'] = $arrayEphemerisGroup1;
+			$params['group-mail-2'] = $arrayEphemerisGroup2;
+			$params['group-mail-3'] = $arrayEphemerisGroup3;
+			
+			//We get all email users, where we are going to send the email
+			$result = db_select('bonmati_ephemeris_subscription', 's')
+									->fields('s', array('email'))
+									->condition('confirmed', 1)
+									->execute();
+			
+			$to = '';
+			$bcc = '';
+			foreach ($result as $record) {
+				$bcc .= $record->email . ', ';
+			}
+			$params['headers'] = array('Bcc' => $bcc);
+			
+			$from = 'no-reply@your-domain.com';
+
+			if (!empty($bcc)) {
+				//Start process for sending emails
+				watchdog('cron', "S'envien les afemèrides als subscriptors.", array(), WATCHDOG_NOTICE);
+				drupal_mail('bonmati', 'email_ephemeris_subscription', $to, $language, $params, $from);
+			}		
+
+			//We are going to prepare for publishing one of them on Twitter
+			$all_aniverssary_ephemeris = array_merge($arrayEphemerisGroup1, $arrayEphemerisGroup2, $arrayEphemerisGroup3);
+			shuffle($all_aniverssary_ephemeris);
+			$node_ephemery = array_slice($all_aniverssary_ephemeris, 0, 1);
+			publish_tweet($node_ephemery[0]);
+			
+		} else {
+			watchdog('cron', "Avui no hi ha cap efemèride per enviar.", array(), WATCHDOG_NOTICE);
+		}
+		
+		//we have completed the process, we save the actual date into database
+		db_delete('bonmati_ephemeris_last_check')
+			->execute();
+		
+		db_insert('bonmati_ephemeris_last_check')
+			->fields(array(
+				'last_check' => time(),
+			))
+			->execute();
+		
+	} else {
+		watchdog('cron', "Avui ja s'havia comprovat si hi havia efemèrides pendents d'enviar, no seguim amb el procés.", array(), WATCHDOG_NOTICE);
+	}
+	
+}

@@ -1,0 +1,97 @@
+<?php
+
+/**
+* @file
+* Bonmati Module
+* Module that adds specific functionalities for historic information
+*/
+
+function bonmati_schema() {
+	
+	$schema['bonmati_history'] = array(
+		'description' => 'It saves the date that took place a fact on the past.',
+		'fields' => array(
+			'nid' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'description' => 'Primary Key: nid',
+			),
+			'year' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+			),
+			'month' => array(
+				'type' => 'int',
+				'not null' => FALSE,
+			),
+			'day' => array(
+				'type' => 'int',
+				'not null' => FALSE,
+			),
+		),
+		'primary key' => array('nid'),
+	);
+	
+		$schema['bonmati_ephemeris'] = array(
+		'description' => 'It saves the date that took place a fact on the past.',
+		'fields' => array(
+			'nid' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'description' => 'Primary Key: nid',
+			),
+			'year' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+			),
+			'month' => array(
+				'type' => 'int',
+				'not null' => FALSE,
+			),
+			'day' => array(
+				'type' => 'int',
+				'not null' => FALSE,
+			),
+		),
+		'primary key' => array('nid'),
+	);
+	
+	$schema['bonmati_ephemeris_subscription'] = array(
+		'description' => t('E-mail users that are interested to recieve information about ephemeris.'),
+		'fields' => array(
+			'id' => array(
+				'description' => 'Identifier',
+				'type' => 'serial',
+				'not null' => TRUE,
+			),
+			'email' => array(
+				'description' => 'Email',
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => TRUE,
+			),
+			'confirmed' => array(
+				'description' => 'If user has confirmed his email adress',
+				'type' => 'int',
+				'size' => 'tiny',
+				'default' => 0,
+				'not null' => TRUE,
+			),
+		),
+		'primary key' => array('id'),
+	);
+	
+	$schema['bonmati_ephemeris_last_check'] = array(
+		'description' => t('Table that saves the last date check that we have checked for sending ephemeris.'),
+		'fields' => array(
+			'last_check' => array(
+				'type' => 'int',
+			),
+		),
+	);
+	
+	return $schema;
+	
+}
