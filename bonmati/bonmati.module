@@ -562,11 +562,12 @@ function bonmati_block_view($delta = '') {
           $result = db_select('field_data_field_ephemeris_place', 'p')
             ->fields('p', array('entity_id'))
             ->condition('field_ephemeris_place_target_id', $node->nid)
-            ->range(0, 5)
             ->execute();
           
-          $list_nid_ephemeris = $result->fetchCol(); 
-          
+          $list_nid_ephemeris = $result->fetchCol();
+          shuffle($list_nid_ephemeris);
+		  $list_nid_ephemeris = array_slice($list_nid_ephemeris, 0, 5);
+			  
           $block['content'] = node_title_list(node_load_multiple($list_nid_ephemeris));
           
         }
@@ -589,10 +590,11 @@ function bonmati_block_view($delta = '') {
           $result = db_select('field_data_field_history_place', 'p')
             ->fields('p', array('entity_id'))
             ->condition('field_history_place_target_id', $node->nid)
-            ->range(0, 5)
             ->execute();
           
-          $list_nid_histories = $result->fetchCol(); 
+          $list_nid_histories = $result->fetchCol();
+		  shuffle($list_nid_histories);
+		  $list_nid_histories = array_slice($list_nid_histories, 0, 5);
           
           $block['content'] = node_title_list(node_load_multiple($list_nid_histories));
           
@@ -617,10 +619,11 @@ function bonmati_block_view($delta = '') {
           $result = db_select('field_data_field_ephemeris_characters', 'c')
             ->fields('c', array('entity_id'))
             ->condition('field_ephemeris_characters_target_id', $node->nid)
-            ->range(0, 5)
             ->execute();
           
-          $list_nid_ephemeris = $result->fetchCol(); 
+          $list_nid_ephemeris = $result->fetchCol();
+		  shuffle($list_nid_ephemeris);
+		  $list_nid_ephemeris = array_slice($list_nid_ephemeris, 0, 5);
           
           $block['content'] = node_title_list(node_load_multiple($list_nid_ephemeris));
           
@@ -645,10 +648,11 @@ function bonmati_block_view($delta = '') {
           $result = db_select('field_data_field_history_characters', 'c')
             ->fields('c', array('entity_id'))
             ->condition('field_history_characters_target_id', $node->nid)
-            ->range(0, 5)
             ->execute();
           
-          $list_nid_histories = $result->fetchCol(); 
+          $list_nid_histories = $result->fetchCol();
+		  shuffle($list_nid_histories);
+		  $list_nid_histories = array_slice($list_nid_histories, 0, 5);
           
           $block['content'] = node_title_list(node_load_multiple($list_nid_histories));
           
@@ -668,7 +672,7 @@ function bonmati_block_view($delta = '') {
         //We load the node
         $node = node_load(arg(1));
 
-				$list_nid_characters = array();				
+		$list_nid_characters = array();				
 				
         if ($node->type == 'history') {
           
@@ -687,12 +691,12 @@ function bonmati_block_view($delta = '') {
 						}
 					}
 					
-				}
+		}
 				
-				//We fill the content with a list of characters
-				if (!empty($list_nid_characters)) {
-					$block['content'] = node_title_list(node_load_multiple($list_nid_characters));
-				}
+		//We fill the content with a list of characters
+		if (!empty($list_nid_characters)) {
+			$block['content'] = node_title_list(node_load_multiple($list_nid_characters));
+		}
         
       }
 			
