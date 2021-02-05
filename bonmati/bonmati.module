@@ -880,13 +880,31 @@ function bonmati_form_ephemeris_subscription_submit($form, &$form_state) {
 	$params = $form_state['values'];
 	$params['id'] = $result;
 	
-	$from = 'no-reply@stjuliabonmati.com';
+	$from = 'no-reply@stjuliabonmati.cat';
 	$to = $form_state['values']['email'];
 	drupal_mail('bonmati', 'email_ephemeris_confirmation', $to, $language, $params, $from);
 
 	drupal_set_message(t('Thank you! To complete your subscription confirm an e-mail that we have sent on') . ' ' . $to . t('. Check your email account. Check the spam folder.'));
 	
 	drupal_goto("");
+	
+}
+
+/**
+*	Function that returns how many years took a place an ephemeris
+*/
+function get_year_ephemeris_took_place($node) {
+	
+	$result = '';
+	$years = date("Y") - $node->field_ephemeris_year_took_place;
+	
+	if ($years <= 1) {
+		$result = t('It took place  ') . $years . t(' year ago now: ');
+	} else {
+		$result = t('It took place  ') . $years . t(' years ago now: ');
+	}
+	
+	return $result;
 	
 }
 
@@ -949,7 +967,7 @@ function bonmati_mail($key, &$message, $params) {
 				$body_html .= '<ul>';
 				foreach ($params['group-mail-1'] as $record) {
 					$link1 = $base_url . '/' . drupal_get_path_alias('node/' . $record->nid);
-					$body_html .= '<li><a href="' . $link1 . '" target="_blank">' . $record->title . '</a></li>';
+					$body_html .= '<li>' . get_year_ephemeris_took_place($record) . '<a href="' . $link1 . '" target="_blank">' . $record->title . '</a></li>';
 				}
 				$body_html .= '</ul>';
 			}
@@ -959,7 +977,7 @@ function bonmati_mail($key, &$message, $params) {
 				$body_html .= '<ul>';
 				foreach ($params['group-mail-2'] as $record) {
 					$link2 = $base_url . '/' . drupal_get_path_alias('node/' . $record->nid);
-					$body_html .= '<li><a href="' . $link2 . '" target="_blank">' . $record->title . '</a></li>';
+					$body_html .= '<li>' . get_year_ephemeris_took_place($record) . '<a href="' . $link2 . '" target="_blank">' . $record->title . '</a></li>';
 				}
 				$body_html .= '</ul>';
 			}
@@ -969,7 +987,7 @@ function bonmati_mail($key, &$message, $params) {
 				$body_html .= '<ul>';
 				foreach ($params['group-mail-3'] as $record) {
 					$link3 = $base_url . '/' . drupal_get_path_alias('node/' . $record->nid);
-					$body_html .= '<li><a href="' . $link3 . '" target="_blank">' . $record->title . '</a></li>';
+					$body_html .= '<li>' . get_year_ephemeris_took_place($record) . '<a href="' . $link3 . '" target="_blank">' . $record->title . '</a></li>';
 				}
 				$body_html .= '</ul>';
 			}
@@ -1094,7 +1112,7 @@ function bonmati_form_unsubscribe_submit($form, &$form_state) {
 	
 	$language = '';
 	
-	$from = 'no-reply@stjuliabonmati.com';
+	$from = 'no-reply@stjuliabonmati.cat';
 	$to = $form_state['values']['email'];
 	
 	//We get the ID subscription, and we pass it as a parameter
@@ -1172,12 +1190,8 @@ function publish_tweet($node) {
 	// uncomment the next line line with your_your_AccessToken and  your_AccessTokenSecret
 	//$cb->setToken("your_AccessToken", "your_AccessTokenSecret");
 	
-	$years = date("Y") - $node->field_ephemeris_year_took_place;
-	if ($years <= 1) {
-		$years = 'Ara fa ' . $years . ' any: ';
-	} else {
-		$years = 'Ara fa ' . $years . ' anys: ';
-	}
+	$years =  get_year_ephemeris_took_place($node);
+	
 	$url = $base_url . url('node/'. $node->nid);
 	
 	if (!empty($node->field_ephemeris_cover_image['und'][0]['uri'])) {
@@ -1296,7 +1310,7 @@ function bonmati_cron() {
 			}
 			$params['headers'] = array('Bcc' => $bcc);
 			
-			$from = 'no-reply@your-domain.com';
+			$from = 'no-reply@stjuliabonmati.cat';
 
 			if (!empty($bcc)) {
 				//Start process for sending emails
