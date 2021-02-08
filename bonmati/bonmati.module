@@ -286,6 +286,94 @@ function bonmati_node_presave($node) {
 }
 
 /**
+*	Updates de min and max values allowed on the field field_history_year each time that we insert/update/delete an history
+*/
+function update_entity_history_min_max_field_history_year() {
+	
+		//Obtenim la informació de les propietats del camp field_history_year de la base de dades
+		$result = db_select('field_config_instance', 'f')
+            ->fields('f', array('data'))
+            ->condition('field_name', 'field_history_year')
+            ->execute();
+		
+		while($data = $result->fetchObject()){
+			$txt = ($data->data);
+		}	
+		
+		//Convertim l'string serialitzat en objecte PHP
+		$obj = unserialize($txt);
+		dpm($obj);
+		
+		//Obtenim l'efemèride amb l'any més antic i l'any més actual
+		$min = db_query('SELECT MIN(year) FROM bonmati_history')->fetchField();
+		$max = db_query('SELECT MAX(year) FROM bonmati_history')->fetchField();
+	
+		if (empty($min)) {
+			$min = 0;
+		}
+	
+		if (empty($max)) {
+			$max = date('Y');
+		}
+		
+		$obj['settings']['min'] = $min;
+		$obj['settings']['max'] = $max;
+	
+		dpm($obj);
+		
+		//Un cop modificats/actualitzats els valors tornem l'objecte a string (serialitzar)
+		$txt = serialize($obj);
+		
+		//Apliquem els canvis de les propietats a la taula de la base de dades
+		//...db_update...
+	
+}
+
+/**
+*	Updates de min and max values allowed on the field field_ephemeris_year each time that we insert/update/delete an ephemeris
+*/
+function update_entity_ephemeris_min_max_field_ephemeris_year() {
+	
+		//Obtenim la informació de les propietats del camp field_ephemeris_year de la base de dades
+		$result = db_select('field_config_instance', 'f')
+            ->fields('f', array('data'))
+            ->condition('field_name', 'field_ephemeris_year')
+            ->execute();
+		
+		while($data = $result->fetchObject()){
+			$txt = ($data->data);
+		}	
+		
+		//Convertim l'string serialitzat en objecte PHP
+		$obj = unserialize($txt);
+		dpm($obj);
+		
+		//Obtenim l'efemèride amb l'any més antic i l'any més actual
+		$min = db_query('SELECT MIN(year) FROM bonmati_ephemeris')->fetchField();
+		$max = db_query('SELECT MAX(year) FROM bonmati_ephemeris')->fetchField();
+	
+		if (empty($min)) {
+			$min = 0;
+		}
+	
+		if (empty($max)) {
+			$max = date('Y');
+		}
+		
+		$obj['settings']['min'] = $min;
+		$obj['settings']['max'] = $max;
+	
+		dpm($obj);
+		
+		//Un cop modificats/actualitzats els valors tornem l'objecte a string (serialitzar)
+		$txt = serialize($obj);
+		
+		//Apliquem els canvis de les propietats a la taula de la base de dades
+		//...db_update...
+	
+}
+
+/**
 *	Implements hook_node_insert().
 */
 function bonmati_node_insert($node) {
@@ -300,6 +388,8 @@ function bonmati_node_insert($node) {
 				'day' => $node->field_history_day_took_place,
 			))
 			->execute();
+		
+		update_entity_history_min_max_field_history_year();
 			
 	} elseif ($node->type == 'ephemeris') {
 
@@ -311,6 +401,8 @@ function bonmati_node_insert($node) {
 				'day' => $node->field_ephemeris_day_took_place,
 			))
 			->execute();
+		
+		update_entity_ephemeris_min_max_field_ephemeris_year();
 	
 	}
 	
@@ -331,6 +423,8 @@ function bonmati_node_update($node) {
 			))
 			->condition('nid', $node->nid)
 			->execute();
+		
+		update_entity_history_min_max_field_history_year();
 			
 	} elseif ($node->type == 'ephemeris') {
 		
@@ -342,7 +436,9 @@ function bonmati_node_update($node) {
 			))
 			->condition('nid', $node->nid)
 			->execute();
-	
+		
+		update_entity_ephemeris_min_max_field_ephemeris_year();
+		
 	}
 	
 }
@@ -353,14 +449,20 @@ function bonmati_node_update($node) {
 function bonmati_node_delete($node) {
 	
 	if ($node->type == 'history') {
+		
 		db_delete('bonmati_history')
 			->condition('nid', $node->nid)
 			->execute();
+		
+		update_entity_history_min_max_field_history_year();
       
 	} elseif ($node->type == 'ephemeris') {
+		
 		db_delete('bonmati_ephemeris')
 			->condition('nid', $node->nid)
 			->execute();
+		
+		update_entity_ephemeris_min_max_field_ephemeris_year();
       
 	}
 	
