@@ -286,7 +286,7 @@ function bonmati_node_presave($node) {
 }
 
 /**
-*	Updates de min and max values allowed on the field field_history_year each time that we insert/update/delete an history
+*	Updates the min and max values allowed on the field field_history_year each time that we insert/update/delete an history
 */
 function update_entity_history_min_max_field_history_year() {
 	
@@ -302,7 +302,6 @@ function update_entity_history_min_max_field_history_year() {
 		
 		//Convertim l'string serialitzat en objecte PHP
 		$obj = unserialize($txt);
-		dpm($obj);
 		
 		//Obtenim l'efemèride amb l'any més antic i l'any més actual
 		$min = db_query('SELECT MIN(year) FROM bonmati_history')->fetchField();
@@ -318,19 +317,22 @@ function update_entity_history_min_max_field_history_year() {
 		
 		$obj['settings']['min'] = $min;
 		$obj['settings']['max'] = $max;
-	
-		dpm($obj);
 		
 		//Un cop modificats/actualitzats els valors tornem l'objecte a string (serialitzar)
 		$txt = serialize($obj);
 		
 		//Apliquem els canvis de les propietats a la taula de la base de dades
-		//...db_update...
+		db_update('field_config_instance')
+			->fields(array(
+					'data' => $txt,
+			))
+			->condition('field_name', 'field_history_year')
+			->execute();
 	
 }
 
 /**
-*	Updates de min and max values allowed on the field field_ephemeris_year each time that we insert/update/delete an ephemeris
+*	Updates the min and max values allowed on the field field_ephemeris_year each time that we insert/update/delete an ephemeris
 */
 function update_entity_ephemeris_min_max_field_ephemeris_year() {
 	
@@ -346,7 +348,6 @@ function update_entity_ephemeris_min_max_field_ephemeris_year() {
 		
 		//Convertim l'string serialitzat en objecte PHP
 		$obj = unserialize($txt);
-		dpm($obj);
 		
 		//Obtenim l'efemèride amb l'any més antic i l'any més actual
 		$min = db_query('SELECT MIN(year) FROM bonmati_ephemeris')->fetchField();
@@ -362,14 +363,17 @@ function update_entity_ephemeris_min_max_field_ephemeris_year() {
 		
 		$obj['settings']['min'] = $min;
 		$obj['settings']['max'] = $max;
-	
-		dpm($obj);
 		
 		//Un cop modificats/actualitzats els valors tornem l'objecte a string (serialitzar)
 		$txt = serialize($obj);
 		
 		//Apliquem els canvis de les propietats a la taula de la base de dades
-		//...db_update...
+		db_update('field_config_instance')
+			->fields(array(
+					'data' => $txt,
+			))
+			->condition('field_name', 'field_ephemeris_year')
+			->execute();
 	
 }
 
